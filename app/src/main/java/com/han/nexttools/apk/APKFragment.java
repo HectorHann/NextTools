@@ -32,6 +32,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import cn.jpush.android.api.JPushInterface;
+
 /**
  * A fragment representing a list of Items.
  * <p/>
@@ -48,6 +50,7 @@ public class APKFragment extends Fragment {
     // TODO: Customize parameters
     private int mColumnCount = 1;
     private OnListFragmentInteractionListener mListener;
+    private static final String DOWNLOAD_DIR = "/sdcard/NextAPK/";
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -55,7 +58,6 @@ public class APKFragment extends Fragment {
      */
 
     private TextView mVersionTV;
-    private FTP mFTP;
     private String mVersionContent;
 
     private File mCurDownAPK;
@@ -114,8 +116,12 @@ public class APKFragment extends Fragment {
             mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);
         }
 
-        mFTP = new FTP("192.168.0.92","Han","111111");
+        new File(DOWNLOAD_DIR).mkdirs();
+
+        Log.d("JPush", JPushInterface.getRegistrationID(getContext()));
+
     }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -145,7 +151,7 @@ public class APKFragment extends Fragment {
             @Override
             public void onListFragmentInteraction(final FTPFile item) {
                 Log.d("Han", item.toString());
-                ((MainActivity)getActivity()).showProgress();
+                ((MainActivity) getActivity()).showProgress();
                 new Thread() {
                     @Override
                     public void run() {
@@ -154,9 +160,9 @@ public class APKFragment extends Fragment {
                             new FTP().downloadSingleFile(item.getName(), "/sdcard/", item.getName(), new FTP.DownLoadProgressListener() {
                                 @Override
                                 public void onDownLoadProgress(String currentStep, long downProcess, File file) {
-                                    ((MainActivity)getActivity()).updateProgress((int) downProcess);
+                                    ((MainActivity) getActivity()).updateProgress((int) downProcess);
                                     if (currentStep.equals(FTP.FTP_DOWN_SUCCESS)) {
-                                        ((MainActivity)getActivity()).dismissProgress();
+                                        ((MainActivity) getActivity()).dismissProgress();
                                         mCurDownAPK = file;
                                         mHandler.sendEmptyMessage(APK_INSTALL);
 
@@ -198,7 +204,7 @@ public class APKFragment extends Fragment {
     }
 
     private void getReadMeTxt() {
-        ((MainActivity)getActivity()).showProgress();
+        ((MainActivity) getActivity()).showProgress();
         new Thread() {
             @Override
             public void run() {
@@ -209,9 +215,9 @@ public class APKFragment extends Fragment {
                         @Override
                         public void onDownLoadProgress(String currentStep, long downProcess, File file) {
                             Log.d("Han", currentStep + "|-" + downProcess);
-                            ((MainActivity)getActivity()).updateProgress((int) downProcess);
+                            ((MainActivity) getActivity()).updateProgress((int) downProcess);
                             if (currentStep.equals(FTP.FTP_DOWN_SUCCESS)) {
-                                ((MainActivity)getActivity()).dismissProgress();
+                                ((MainActivity) getActivity()).dismissProgress();
                                 try {
                                     FileInputStream inputStream = new FileInputStream(file);
                                     byte[] bytes = new byte[inputStream.available()];
@@ -259,4 +265,5 @@ public class APKFragment extends Fragment {
         // TODO: Update argument type and name
         void onListFragmentInteraction(FTPFile item);
     }
+
 }

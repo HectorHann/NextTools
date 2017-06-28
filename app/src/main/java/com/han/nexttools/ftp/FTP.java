@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -319,6 +321,15 @@ public class FTP {
             }
             Log.d("Han", file.getName());
         }
+
+        Collections.sort(fileList, new Comparator<FTPFile>() {
+            @Override
+            public int compare(FTPFile o1, FTPFile o2) {
+                return -o1.getTimestamp().compareTo(o2.getTimestamp());
+            }
+        });
+
+
         this.closeConnect();
         return fileList;
     }
