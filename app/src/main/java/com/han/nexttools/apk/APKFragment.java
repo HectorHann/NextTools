@@ -159,8 +159,8 @@ public class APKFragment extends Fragment {
                         try {
                             new FTP().downloadSingleFile(item.getName(), "/sdcard/", item.getName(), new FTP.DownLoadProgressListener() {
                                 @Override
-                                public void onDownLoadProgress(String currentStep, long downProcess, File file) {
-                                    ((MainActivity) getActivity()).updateProgress((int) downProcess);
+                                public void onDownLoadProgress(String currentStep, int downProcess, File file) {
+                                    ((MainActivity) getActivity()).updateProgress( downProcess);
                                     if (currentStep.equals(FTP.FTP_DOWN_SUCCESS)) {
                                         ((MainActivity) getActivity()).dismissProgress();
                                         mCurDownAPK = file;
@@ -213,9 +213,8 @@ public class APKFragment extends Fragment {
 
                     new FTP().downloadSingleFile("readme.txt", "/sdcard/", "readme.txt", new FTP.DownLoadProgressListener() {
                         @Override
-                        public void onDownLoadProgress(String currentStep, long downProcess, File file) {
-                            Log.d("Han", currentStep + "|-" + downProcess);
-                            ((MainActivity) getActivity()).updateProgress((int) downProcess);
+                        public void onDownLoadProgress(String currentStep, int downProcess, File file) {
+                            ((MainActivity) getActivity()).updateProgress(downProcess);
                             if (currentStep.equals(FTP.FTP_DOWN_SUCCESS)) {
                                 ((MainActivity) getActivity()).dismissProgress();
                                 try {
@@ -230,8 +229,6 @@ public class APKFragment extends Fragment {
                                     inputStream.close();
                                     arrayOutputStream.close();
                                     mVersionContent = new String(arrayOutputStream.toByteArray());
-                                    Log.d("Han", mVersionContent);
-
                                     mHandler.sendEmptyMessage(APK_VERSION);
                                 } catch (IOException e) {
                                     e.printStackTrace();

@@ -22,6 +22,7 @@ import android.widget.ProgressBar;
 import com.han.nexttools.apk.APKFragment;
 import com.han.nexttools.crash.CrashFragment;
 import com.han.nexttools.log.LogFragment;
+import com.han.nexttools.push.PushReceiver;
 
 import cn.jpush.android.api.JPushInterface;
 
@@ -122,16 +123,15 @@ public class MainActivity extends FragmentActivity {
         } catch (Exception e) {
 
         }
-
     }
 
     public void updateProgress(int progress) {
-        try {
             progressBar.setProgress(progress);
-        } catch (Exception e) {
-
-        }
-
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        PushReceiver.clearlAllNotification(this);
+    }
 }

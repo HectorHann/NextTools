@@ -276,8 +276,8 @@ public class FTP {
         while ((byteCount = input.read(b)) != -1) {
             out.write(b, 0, byteCount);
             bytesWritten += byteCount;
-            int process = (int) (bytesWritten * 100 / totalSize);
-            Log.d("Han", process + " = " + process);
+            int process = (int) (((float) bytesWritten / (float)totalSize) * 100);
+            Log.d("Han", "process " + bytesWritten + "/" + totalSize + "=" + process);
             listener.onDownLoadProgress(FTP_DOWN_LOADING, process, null);
         }
         out.flush();
@@ -448,7 +448,7 @@ public class FTP {
      * 下载进度监听
      */
     public interface DownLoadProgressListener {
-        public void onDownLoadProgress(String currentStep, long downProcess, File file);
+        public void onDownLoadProgress(String currentStep, int downProcess, File file);
     }
 
     /*
