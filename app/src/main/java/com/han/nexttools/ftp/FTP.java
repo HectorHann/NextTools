@@ -248,7 +248,6 @@ public class FTP {
         for (FTPFile file : files) {
             if (file.getName().equals(serverFileName)) {
                 totalSize = file.getSize();
-                Log.d("Han", String.valueOf(totalSize));
                 break;
             }
         }
@@ -273,10 +272,15 @@ public class FTP {
         int bytesWritten = 0;
         int byteCount = 0;
 
+        int lastprocess = 0;
         while ((byteCount = input.read(b)) != -1) {
             out.write(b, 0, byteCount);
             bytesWritten += byteCount;
-            int process = (int) (((float) bytesWritten / (float)totalSize) * 100);
+            int process = (int) (((float) bytesWritten / (float) totalSize) * 100);
+            if (lastprocess == process) {
+                continue;
+            }
+            lastprocess = process;
             Log.d("Han", "process " + bytesWritten + "/" + totalSize + "=" + process);
             listener.onDownLoadProgress(FTP_DOWN_LOADING, process, null);
         }
@@ -285,54 +289,47 @@ public class FTP {
         input.close();
 
         Log.d("Han", String.valueOf(new File(localPath).length()));
-        listener.onDownLoadProgress(FTP_DOWN_SUCCESS, 0, new File(localPath));
         // 此方法是来确保流处理完毕，如果没有此方法，可能会造成现程序死掉
         if (ftpClient.completePendingCommand()) {
             listener.onDownLoadProgress(FTP_DOWN_SUCCESS, 0, new File(localPath));
         } else {
             listener.onDownLoadProgress(FTP_DOWN_FAIL, 0, null);
         }
-
-        // 下载完成之后关闭连接
         this.closeConnect();
-        listener.onDownLoadProgress(FTP_DISCONNECT_SUCCESS, 0, null);
-
-        return;
     }
 
 
-    public List<FTPFile> getAPKFileList()
-            throws Exception {
+    public List<FTPFile> getAPKFileList() {
 
         List<FTPFile> fileList = new ArrayList<>();
         // 打开FTP服务
         try {
             this.openConnect();
+
+            FTPFile[] files = ftpClient.listFiles();
+
+            for (FTPFile ftpFile : files) {
+                if (ftpFile.getName().endsWith(".apk")) {
+                    fileList.add(ftpFile);
+                }
+            }
+
+            Collections.sort(fileList, new Comparator<FTPFile>() {
+                @Override
+                public int compare(FTPFile o1, FTPFile o2) {
+                    return -o1.getTimestamp().compareTo(o2.getTimestamp());
+                }
+            });
+
+
+            this.closeConnect();
         } catch (IOException e1) {
             e1.printStackTrace();
-            return fileList;
         }
-
-        // 先判断服务器文件是否存在
-        FTPFile[] files = ftpClient.listFiles();
-        for (FTPFile file : files) {
-            if (file.getName().endsWith(".apk")) {
-                fileList.add(file);
-            }
-            Log.d("Han", file.getName());
-        }
-
-        Collections.sort(fileList, new Comparator<FTPFile>() {
-            @Override
-            public int compare(FTPFile o1, FTPFile o2) {
-                return -o1.getTimestamp().compareTo(o2.getTimestamp());
-            }
-        });
-
-
-        this.closeConnect();
+        Log.d("APK", "end get apk list. size = " + fileList.size());
         return fileList;
     }
+
 
     // -------------------------------------------------------文件删除方法------------------------------------------------
 
@@ -458,4 +455,7 @@ public class FTP {
         public void onDeleteProgress(String currentStep);
     }
 
+    public interface GetAPKListListener {
+        public void onAPKList(List<FTPFile> list);
+    }
 }

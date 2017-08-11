@@ -21,14 +21,10 @@ import android.widget.TextView;
 import com.han.nexttools.MainActivity;
 import com.han.nexttools.R;
 import com.han.nexttools.RecyclerViewDivider;
-import com.han.nexttools.ftp.FTP;
 
 import org.apache.commons.net.ftp.FTPFile;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,18 +36,17 @@ import cn.jpush.android.api.JPushInterface;
  * Activities containing this fragment MUST implement the {@link OnListFragmentInteractionListener}
  * interface.
  */
-public class APKFragment extends Fragment {
+public class APKFragment extends Fragment implements APKContract.View {
 
     // TODO: Customize parameter argument names
     private static final String ARG_COLUMN_COUNT = "column-count";
     private static final int APK_LIST = 0;
     private static final int APK_VERSION = 1;
     private static final int APK_INSTALL = 2;
+    private static final String DOWNLOAD_DIR = "/sdcard/NextAPK/";
     // TODO: Customize parameters
     private int mColumnCount = 1;
     private OnListFragmentInteractionListener mListener;
-    private static final String DOWNLOAD_DIR = "/sdcard/NextAPK/";
-
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
@@ -61,13 +56,9 @@ public class APKFragment extends Fragment {
     private String mVersionContent;
 
     private File mCurDownAPK;
-
-    public APKFragment() {
-    }
-
     private List<FTPFile> mAPKFileList = new ArrayList<>();
     private APKRecyclerViewAdapter mAdapter;
-
+    private APKContract.Presenter mPresenter;
     private Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -98,6 +89,9 @@ public class APKFragment extends Fragment {
         }
     };
 
+    public APKFragment() {
+    }
+
     // TODO: Customize parameter initialization
     @SuppressWarnings("unused")
     public static APKFragment newInstance(int columnCount) {
@@ -111,15 +105,11 @@ public class APKFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         if (getArguments() != null) {
             mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);
         }
-
-        new File(DOWNLOAD_DIR).mkdirs();
-
+        mPresenter.createDir(DOWNLOAD_DIR);
         Log.d("JPush", JPushInterface.getRegistrationID(getContext()));
-
     }
 
 
@@ -127,7 +117,12 @@ public class APKFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_apk_list, container, false);
+        view.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
 
+            }
+        });
         mVersionTV = (TextView) view.findViewById(R.id.version_content);
         // Set the adapter
         Context context = view.getContext();
@@ -151,30 +146,7 @@ public class APKFragment extends Fragment {
             @Override
             public void onListFragmentInteraction(final FTPFile item) {
                 Log.d("Han", item.toString());
-                ((MainActivity) getActivity()).showProgress();
-                new Thread() {
-                    @Override
-                    public void run() {
-                        super.run();
-                        try {
-                            new FTP().downloadSingleFile(item.getName(), "/sdcard/", item.getName(), new FTP.DownLoadProgressListener() {
-                                @Override
-                                public void onDownLoadProgress(String currentStep, int downProcess, File file) {
-                                    ((MainActivity) getActivity()).updateProgress( downProcess);
-                                    if (currentStep.equals(FTP.FTP_DOWN_SUCCESS)) {
-                                        ((MainActivity) getActivity()).dismissProgress();
-                                        mCurDownAPK = file;
-                                        mHandler.sendEmptyMessage(APK_INSTALL);
-
-                                    }
-                                }
-                            });
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }.start();
-
+                mPresenter.downloadAPKFile(item, "/sdcard/", item.getName());
             }
         };
     }
@@ -182,70 +154,61 @@ public class APKFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-
-        getReadMeTxt();
-        getApkList();
-    }
-
-    private void getApkList() {
-        new Thread() {
-            @Override
-            public void run() {
-                super.run();
-                try {
-                    mAPKFileList.clear();
-                    mAPKFileList.addAll(new FTP().getAPKFileList());
-                    mHandler.sendEmptyMessage(APK_LIST);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }.start();
-    }
-
-    private void getReadMeTxt() {
-        ((MainActivity) getActivity()).showProgress();
-        new Thread() {
-            @Override
-            public void run() {
-                super.run();
-                try {
-
-                    new FTP().downloadSingleFile("readme.txt", "/sdcard/", "readme.txt", new FTP.DownLoadProgressListener() {
-                        @Override
-                        public void onDownLoadProgress(String currentStep, int downProcess, File file) {
-                            ((MainActivity) getActivity()).updateProgress(downProcess);
-                            if (currentStep.equals(FTP.FTP_DOWN_SUCCESS)) {
-                                ((MainActivity) getActivity()).dismissProgress();
-                                try {
-                                    FileInputStream inputStream = new FileInputStream(file);
-                                    byte[] bytes = new byte[inputStream.available()];
-                                    ByteArrayOutputStream arrayOutputStream = new ByteArrayOutputStream();
-
-                                    while (inputStream.read(bytes) != -1) {
-                                        arrayOutputStream.write(bytes, 0, bytes.length);
-                                    }
-
-                                    inputStream.close();
-                                    arrayOutputStream.close();
-                                    mVersionContent = new String(arrayOutputStream.toByteArray());
-                                    mHandler.sendEmptyMessage(APK_VERSION);
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        }
-                    });
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }.start();
+        Log.d("APK", "onResume");
+        mPresenter.getAPKList();
+        mPresenter.downloadReadMeFile("/sdcard/", "readme.txt");
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
+    }
+
+    @Override
+    public void setPresenter(APKContract.Presenter presenter) {
+        mPresenter = presenter;
+    }
+
+    @Override
+    public void showProgress() {
+        ((MainActivity) getActivity()).showProgress();
+    }
+
+    @Override
+    public void dismissProgress() {
+        ((MainActivity) getActivity()).dismissProgress();
+    }
+
+    @Override
+    public void setProgress(int progress) {
+        ((MainActivity) getActivity()).updateProgress(progress);
+    }
+
+    @Override
+    public void showAPKList(List<FTPFile> apkList) {
+        mAPKFileList.clear();
+        mAPKFileList.addAll(apkList);
+        mAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void showReadMe(String content) {
+        SpannableString s = new SpannableString(content);
+        s.setSpan(new TabStopSpan() {
+            @Override
+            public int getTabStop() {
+                return 100;
+            }
+        }, 5, 30, 0);
+        mVersionTV.setText(s, TextView.BufferType.SPANNABLE);
+    }
+
+    @Override
+    public void installAPK(String path) {
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.setDataAndType(Uri.fromFile(new File(path)), "application/vnd.android.package-archive");
+        getActivity().startActivity(intent);
     }
 
     /**

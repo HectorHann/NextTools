@@ -19,7 +19,9 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 
+import com.han.nexttools.apk.APKContract;
 import com.han.nexttools.apk.APKFragment;
+import com.han.nexttools.apk.APKPresenter;
 import com.han.nexttools.crash.CrashFragment;
 import com.han.nexttools.log.LogFragment;
 import com.han.nexttools.push.PushReceiver;
@@ -35,20 +37,7 @@ public class MainActivity extends FragmentActivity {
     private BottomNavigationView navigation;
     private String mPushContent;
 
-    private void showPushDialog() {
-
-        new AlertDialog.Builder(MainActivity.this).setTitle("更新提示")//设置对话框标题
-                .setMessage(mPushContent)//设置显示的内容
-                .setPositiveButton("OK", new DialogInterface.OnClickListener() {//添加确定按钮
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {//确定按钮的响应事件
-                    }
-                }).setCancelable(false).
-                show();//在按键响应事件中显示此对话框
-
-
-    }
-
+    private APKPresenter mAPKPresenter;
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
 
@@ -58,6 +47,7 @@ public class MainActivity extends FragmentActivity {
             switch (item.getItemId()) {
                 case R.id.navigation_apk:
                     fragment = new APKFragment();
+                    mAPKPresenter = new APKPresenter((APKContract.View) fragment);
                     break;
                 case R.id.navigation_log:
                     fragment = new LogFragment();
@@ -75,6 +65,19 @@ public class MainActivity extends FragmentActivity {
 
     };
 
+    private void showPushDialog() {
+
+        new AlertDialog.Builder(MainActivity.this).setTitle("更新提示")//设置对话框标题
+                .setMessage(mPushContent)//设置显示的内容
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {//添加确定按钮
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {//确定按钮的响应事件
+                    }
+                }).setCancelable(false).
+                show();//在按键响应事件中显示此对话框
+
+
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -120,6 +123,7 @@ public class MainActivity extends FragmentActivity {
     public void dismissProgress() {
         try {
             dialog.dismiss();
+            progressBar.setProgress(0);
         } catch (Exception e) {
 
         }
