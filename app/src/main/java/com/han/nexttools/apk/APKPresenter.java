@@ -27,7 +27,7 @@ public class APKPresenter implements APKContract.Presenter {
     private static int MSG_WHAT_APK_FILE_PATH = 0x2;
     private static int MSG_WHAT_APK_LIST = 0x3;
     private static int MSG_WHAT_PROGRESS = 0x4;
-    private APKContract.View mTasksView;
+    private APKContract.View mView;
     @SuppressLint("HandlerLeak")
     private Handler handler = new Handler() {
         @Override
@@ -35,24 +35,24 @@ public class APKPresenter implements APKContract.Presenter {
             super.handleMessage(msg);
             Log.d("APK", "Message what = " + String.valueOf(msg.what) + "  arg1 = " + msg.arg1);
             if (msg.what == MSG_WHAT_READEME_FILE_PATH) {
-                mTasksView.dismissProgress();
+                mView.dismissProgress();
                 getReadMeContent((String) msg.obj);
             } else if (msg.what == MSG_WHAT_APK_FILE_PATH) {
-                mTasksView.dismissProgress();
-                mTasksView.installAPK((String) msg.obj);
-                mTasksView.dismissProgress();
+                mView.dismissProgress();
+                mView.installAPK((String) msg.obj);
+                mView.dismissProgress();
             } else if (msg.what == MSG_WHAT_APK_LIST) {
-                mTasksView.dismissProgress();
-                mTasksView.showAPKList((List<FTPFile>) msg.obj);
+                mView.dismissProgress();
+                mView.showAPKList((List<FTPFile>) msg.obj);
             } else if (msg.what == MSG_WHAT_PROGRESS) {
-                mTasksView.setProgress(msg.arg1);
+                mView.setProgress(msg.arg1);
             }
         }
     };
 
     public APKPresenter(@NonNull APKContract.View view) {
-        mTasksView = view;
-        mTasksView.setPresenter(this);
+        mView = view;
+        mView.setPresenter(this);
     }
 
     @Override
@@ -73,7 +73,7 @@ public class APKPresenter implements APKContract.Presenter {
 
     @Override
     public void downloadAPKFile(final FTPFile file, final String fileDir, final String fileName) {
-        mTasksView.showProgress();
+        mView.showProgress();
         new Thread() {
             @Override
             public void run() {
@@ -105,7 +105,7 @@ public class APKPresenter implements APKContract.Presenter {
     @Override
     public void downloadReadMeFile(final String fileDir, final String fileName) {
         Log.d("APK", "get readme.txt");
-        mTasksView.showProgress();
+        mView.showProgress();
         new Thread() {
             @Override
             public void run() {
@@ -150,7 +150,7 @@ public class APKPresenter implements APKContract.Presenter {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        mTasksView.showReadMe(content);
+        mView.showReadMe(content);
     }
 
 

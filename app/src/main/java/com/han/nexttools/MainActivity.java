@@ -23,7 +23,9 @@ import com.han.nexttools.apk.APKContract;
 import com.han.nexttools.apk.APKFragment;
 import com.han.nexttools.apk.APKPresenter;
 import com.han.nexttools.crash.CrashFragment;
+import com.han.nexttools.log.LogContract;
 import com.han.nexttools.log.LogFragment;
+import com.han.nexttools.log.LogPresenter;
 import com.han.nexttools.push.PushReceiver;
 
 import cn.jpush.android.api.JPushInterface;
@@ -38,6 +40,8 @@ public class MainActivity extends FragmentActivity {
     private String mPushContent;
 
     private APKPresenter mAPKPresenter;
+    private LogPresenter mLogPresenter;
+
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
 
@@ -51,6 +55,7 @@ public class MainActivity extends FragmentActivity {
                     break;
                 case R.id.navigation_log:
                     fragment = new LogFragment();
+                    mLogPresenter = new LogPresenter((LogContract.View) fragment);
                     break;
                 case R.id.navigation_crash:
                     fragment = new CrashFragment();

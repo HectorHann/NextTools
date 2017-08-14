@@ -1,5 +1,6 @@
 package com.han.nexttools.log;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
 import android.net.Uri;
@@ -36,7 +37,7 @@ import java.util.regex.Pattern;
  * Use the {@link LogFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class LogFragment extends Fragment {
+public class LogFragment extends Fragment implements LogContract.View {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -47,8 +48,6 @@ public class LogFragment extends Fragment {
     private static final int SEARCH_FILE = 1;
     private static final int JSON_PERCENT = 2;
     // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
 
     private OnFragmentInteractionListener mListener;
 
@@ -60,7 +59,9 @@ public class LogFragment extends Fragment {
     private ArrayList<String> contentList = new ArrayList<>();
     private String contentJson;
 
+    private LogContract.Presenter mPresenter;
 
+    @SuppressLint("HandlerLeak")
     private Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -77,36 +78,9 @@ public class LogFragment extends Fragment {
         }
     };
 
-    public LogFragment() {
-        // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment LogFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static LogFragment newInstance(String param1, String param2) {
-        LogFragment fragment = new LogFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
-
 
         File dir = new File(LOG_DIR);
         File[] files = dir.listFiles();
@@ -155,37 +129,6 @@ public class LogFragment extends Fragment {
         return view;
     }
 
-    private void getLogFileContent() {
-        ((MainActivity) getActivity()).showProgress();
-        new Thread() {
-            @Override
-            public void run() {
-                super.run();
-                contentList.clear();
-                contentList.addAll(ReadFile.readLastNLine(mLogFile, 60));
-//                Collections.reverse(contentList);
-                StringBuffer sb = new StringBuffer();
-                for (int i = 0; i < contentList.size(); i++) {
-                    String str = contentList.get(i);
-                    if (str.contains("NextHttp Request") || str.contains("NextHttp Response")) {
-                        sb.append("\n");
-                        sb.append("\n");
-                    }
-
-                    sb.append(str);
-                    sb.append("\n");
-                    Message msg = mHandler.obtainMessage(JSON_PERCENT);
-                    msg.arg1 = i * 100 / contentList.size();
-                    mHandler.sendEmptyMessage(JSON_PERCENT);
-                }
-                contentJson = JsonFormatTool.formatJson(sb.toString());
-                mHandler.sendEmptyMessage(READ_FILE);
-
-            }
-        }.start();
-
-
-    }
 
     // TODO: Rename method, update argument and hook method into UI event
     public void onButtonPressed(Uri uri) {
@@ -197,8 +140,7 @@ public class LogFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-
-        getLogFileContent();
+        mPresenter.readLastNLine(mLogFile);
     }
 
     @Override
@@ -210,6 +152,16 @@ public class LogFragment extends Fragment {
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    @Override
+    public void setPresenter(LogContract.Presenter presenter) {
+        mPresenter = presenter;
+    }
+
+    @Override
+    public void showlog(String log) {
+        mTV.setText(log);
     }
 
     /**
