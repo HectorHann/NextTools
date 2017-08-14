@@ -16,8 +16,7 @@ import com.han.nexttools.RecyclerViewDivider;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.List;
 
 /**
  * A fragment representing a list of Items.
@@ -25,7 +24,7 @@ import java.util.Collections;
  * Activities containing this fragment MUST implement the {@link OnListFragmentInteractionListener}
  * interface.
  */
-public class CrashFragment extends Fragment {
+public class CrashFragment extends Fragment implements CrashContract.View {
 
     // TODO: Customize parameter argument names
     private static final String ARG_COLUMN_COUNT = "column-count";
@@ -35,6 +34,8 @@ public class CrashFragment extends Fragment {
     private OnListFragmentInteractionListener mListener;
     private ArrayList<File> mCrashFileList = new ArrayList<>();
     private CrashRecyclerViewAdapter mAdapter;
+
+    private CrashPresenter mPresent;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -61,24 +62,11 @@ public class CrashFragment extends Fragment {
         }
     }
 
-    private void getCrashFiles() {
-        mCrashFileList.clear();
-        File dir = new File(CRASH_DIR);
-        File[] files = dir.listFiles();
-        if (files != null) {
-            mCrashFileList.addAll(Arrays.asList(files));
-            Collections.sort(mCrashFileList);
-            Collections.reverse(mCrashFileList);
-        }
-
-    }
-
 
     @Override
     public void onResume() {
         super.onResume();
-        getCrashFiles();
-        mAdapter.notifyDataSetChanged();
+        mPresent.loadCrashFile(CRASH_DIR);
     }
 
     @Override
@@ -110,7 +98,7 @@ public class CrashFragment extends Fragment {
             @Override
             public void onListFragmentInteraction(File item) {
                 Log.d("Han", item.toString());
-                CrashViewActivity.start(context, item);
+                startCrashViewActivity(item);
             }
         };
     }
@@ -119,6 +107,24 @@ public class CrashFragment extends Fragment {
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    @Override
+    public void setPresenter(CrashContract.Presenter presenter) {
+        mPresent = (CrashPresenter) presenter;
+    }
+
+
+    @Override
+    public void showFileList(List<File> list) {
+        mCrashFileList.clear();
+        mCrashFileList.addAll(list);
+        mAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void startCrashViewActivity(File file) {
+        CrashViewActivity.start(getContext(), file);
     }
 
     /**

@@ -22,7 +22,9 @@ import android.widget.ProgressBar;
 import com.han.nexttools.apk.APKContract;
 import com.han.nexttools.apk.APKFragment;
 import com.han.nexttools.apk.APKPresenter;
+import com.han.nexttools.crash.CrashContract;
 import com.han.nexttools.crash.CrashFragment;
+import com.han.nexttools.crash.CrashPresenter;
 import com.han.nexttools.log.LogContract;
 import com.han.nexttools.log.LogFragment;
 import com.han.nexttools.log.LogPresenter;
@@ -41,6 +43,7 @@ public class MainActivity extends FragmentActivity {
 
     private APKPresenter mAPKPresenter;
     private LogPresenter mLogPresenter;
+    private CrashPresenter mCrashPresenter;
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -59,6 +62,7 @@ public class MainActivity extends FragmentActivity {
                     break;
                 case R.id.navigation_crash:
                     fragment = new CrashFragment();
+                    mCrashPresenter = new CrashPresenter((CrashContract.View) fragment);
                     break;
 
             }

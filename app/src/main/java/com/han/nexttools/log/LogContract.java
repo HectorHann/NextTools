@@ -1,5 +1,7 @@
 package com.han.nexttools.log;
 
+import android.text.SpannableString;
+
 import com.han.nexttools.BasePresenter;
 import com.han.nexttools.BaseView;
 
@@ -16,10 +18,16 @@ public interface LogContract {
 
         String formatLog2Json(String log);
 
+        void searchContent(String content, String search);
+
     }
 
     interface View extends BaseView<Presenter> {
-        void showlog(String log);
+        void showLog(SpannableString log);
+
+        void showLog(String log);
+
+        void showToast(String toast);
 
     }
 }
