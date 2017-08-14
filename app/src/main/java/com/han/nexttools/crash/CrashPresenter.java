@@ -14,6 +14,7 @@ public class CrashPresenter implements CrashContract.Presenter {
 
     public CrashPresenter(CrashContract.View view) {
         mView = view;
+        mView.setPresenter(this);
     }
 
     @Override
