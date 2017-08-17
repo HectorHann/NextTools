@@ -26,9 +26,9 @@ import java.util.List;
  */
 public class CrashFragment extends Fragment implements CrashContract.View {
 
+    public static final String CRASH_DIR = "/sdcard/NextTrucking/crash";
     // TODO: Customize parameter argument names
     private static final String ARG_COLUMN_COUNT = "column-count";
-    private static final String CRASH_DIR = "/sdcard/NextTrucking/crash";
     // TODO: Customize parameters
     private int mColumnCount = 1;
     private OnListFragmentInteractionListener mListener;
