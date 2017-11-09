@@ -5,6 +5,11 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
+    <Button
+        android:id="@+id/clear_data"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="清空数据"/>
     <EditText
         android:id="@+id/search"
         android:layout_width="match_parent"

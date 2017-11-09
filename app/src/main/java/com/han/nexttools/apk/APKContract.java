@@ -1,5 +1,7 @@
 package com.han.nexttools.apk;
 
+import android.content.Context;
+
 import com.han.nexttools.BasePresenter;
 import com.han.nexttools.BaseView;
 
@@ -16,7 +18,7 @@ public interface APKContract {
     interface Presenter extends BasePresenter {
         void getAPKList();
 
-        void downloadAPKFile(FTPFile file, String fileDir, String fileName);
+        void downloadAPKFile(Context context, FTPFile file, String fileDir, String fileName);
 
         void downloadReadMeFile(String fileDir, String fileName);
 

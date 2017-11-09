@@ -17,6 +17,9 @@ import android.widget.Toast;
 import com.han.nexttools.R;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+
 public class LogFragment extends Fragment implements LogContract.View {
     // TODO: Rename parameter arguments, choose names that match
     private static final String LOG_DIR = "/sdcard/NextTrucking/log";
@@ -56,6 +59,22 @@ public class LogFragment extends Fragment implements LogContract.View {
             }
         });
 
+        view.findViewById(R.id.clear_data).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    FileWriter fileWriter = new FileWriter(mLogFile, false);
+                    fileWriter.write("");
+                    fileWriter.flush();
+                    fileWriter.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    mPresenter.readLastNLine(mLogFile);
+                }
+
+            }
+        });
 
         return view;
     }

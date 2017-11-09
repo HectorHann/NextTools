@@ -75,9 +75,8 @@ public class CrashFragment extends Fragment implements CrashContract.View {
         View view = inflater.inflate(R.layout.fragment_crash_list, container, false);
 
         // Set the adapter
-        if (view instanceof RecyclerView) {
             Context context = view.getContext();
-            RecyclerView recyclerView = (RecyclerView) view;
+        RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.list);
             if (mColumnCount <= 1) {
                 recyclerView.setLayoutManager(new LinearLayoutManager(context));
             } else {
@@ -86,7 +85,15 @@ public class CrashFragment extends Fragment implements CrashContract.View {
             mAdapter = new CrashRecyclerViewAdapter(mCrashFileList, mListener);
             recyclerView.setAdapter(mAdapter);
             recyclerView.addItemDecoration(new RecyclerViewDivider(context, LinearLayoutManager.HORIZONTAL));
-        }
+        view.findViewById(R.id.clear_data).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                for (File file : mCrashFileList) {
+                    file.delete();
+                }
+                mPresent.loadCrashFile(CRASH_DIR);
+            }
+        });
         return view;
     }
 

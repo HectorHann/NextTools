@@ -146,7 +146,7 @@ public class APKFragment extends Fragment implements APKContract.View {
             @Override
             public void onListFragmentInteraction(final FTPFile item) {
                 Log.d("Han", item.toString());
-                mPresenter.downloadAPKFile(item, "/sdcard/", item.getName());
+                mPresenter.downloadAPKFile(getContext(), item, "/sdcard/", item.getName());
             }
         };
     }
@@ -211,6 +211,10 @@ public class APKFragment extends Fragment implements APKContract.View {
         getActivity().startActivity(intent);
     }
 
+    public List<FTPFile> getAPKFileList() {
+        return mAPKFileList == null ? new ArrayList<>() : mAPKFileList;
+    }
+
     /**
      * This interface must be implemented by activities that contain this
      * fragment to allow an interaction in this fragment to be communicated
@@ -225,5 +229,4 @@ public class APKFragment extends Fragment implements APKContract.View {
         // TODO: Update argument type and name
         void onListFragmentInteraction(FTPFile item);
     }
-
 }

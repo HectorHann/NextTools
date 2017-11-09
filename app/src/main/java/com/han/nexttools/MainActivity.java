@@ -1,8 +1,11 @@
 package com.han.nexttools;
 
+import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.Fragment;
@@ -30,6 +33,11 @@ import com.han.nexttools.log.LogFragment;
 import com.han.nexttools.log.LogPresenter;
 import com.han.nexttools.push.PushReceiver;
 
+import org.apache.commons.net.ftp.FTPFile;
+import org.json.JSONObject;
+
+import java.util.List;
+
 import cn.jpush.android.api.JPushInterface;
 
 public class MainActivity extends FragmentActivity {
@@ -45,6 +53,25 @@ public class MainActivity extends FragmentActivity {
     private LogPresenter mLogPresenter;
     private CrashPresenter mCrashPresenter;
 
+    private boolean mForceUpdate;
+    private String mUpdateAPK = "";
+    private boolean mInstall;
+    Handler mHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            if (mInstall) {
+                mInstall = false;
+                @SuppressLint("RestrictedApi") List<FTPFile> ftpFileList = ((APKFragment) mFragmentManager.getFragments().get(0)).getAPKFileList();
+                for (FTPFile item : ftpFileList) {
+                    if (item.getName().toLowerCase().contains(mUpdateAPK.toLowerCase())) {
+                        Log.d("APK", "Download APK " + item.getName());
+                        mAPKPresenter.downloadAPKFile(MainActivity.this, item, "/sdcard/", item.getName());
+                    }
+                }
+            }
+        }
+    };
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
 
@@ -74,24 +101,42 @@ public class MainActivity extends FragmentActivity {
 
     };
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        dismissProgress();
+    }
+
     private void showPushDialog() {
 
+        if (mInstall) {
+            return;
+        }
         new AlertDialog.Builder(MainActivity.this).setTitle("更新提示")//设置对话框标题
                 .setMessage(mPushContent)//设置显示的内容
                 .setPositiveButton("OK", new DialogInterface.OnClickListener() {//添加确定按钮
+                    @SuppressLint("RestrictedApi")
                     @Override
-                    public void onClick(DialogInterface dialog, int which) {//确定按钮的响应事件
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (mForceUpdate) {
+                            List<FTPFile> ftpFileList = ((APKFragment) mFragmentManager.getFragments().get(0)).getAPKFileList();
+                            for (FTPFile item : ftpFileList) {
+                                if (item.getName().toLowerCase().contains(mUpdateAPK.toLowerCase())) {
+                                    Log.d("APK", "Download APK " + item.getName());
+                                    mAPKPresenter.downloadAPKFile(MainActivity.this, item, "/sdcard/", item.getName());
+                                }
+                            }
+                        }
                     }
                 }).setCancelable(false).
-                show();//在按键响应事件中显示此对话框
-
-
+                show();
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Log.d("JPush", JPushInterface.getRegistrationID(this));
         mFragmentManager = getSupportFragmentManager();
         mFrameLayout = (FrameLayout) findViewById(R.id.content);
         navigation = (BottomNavigationView) findViewById(R.id.navigation);
@@ -101,10 +146,22 @@ public class MainActivity extends FragmentActivity {
 
         mPushContent = getIntent().getStringExtra(JPushInterface.EXTRA_ALERT);
 
+        try {
+            JSONObject json = new JSONObject(getIntent().getExtras().getString(JPushInterface.EXTRA_EXTRA));
+            mForceUpdate = json.getBoolean("force");
+            mUpdateAPK = json.getString("apk");
+            mInstall = json.getBoolean("install");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        Log.d("JPush", "ForceUPdate = " + mForceUpdate + "|APK = " + mUpdateAPK);
         if (!TextUtils.isEmpty(mPushContent)) {
             Log.d("JPush", mPushContent);
             showPushDialog();
         }
+
+        mHandler.sendEmptyMessageDelayed(1, 2000);
     }
 
 
@@ -121,8 +178,10 @@ public class MainActivity extends FragmentActivity {
                         LinearLayout.LayoutParams.MATCH_PARENT));
                 dialog.setCancelable(false);
             }
+            if (!dialog.isShowing()) {
+                dialog.show();
+            }
 
-            dialog.show();
         } catch (Exception e) {
 
         }
@@ -131,15 +190,17 @@ public class MainActivity extends FragmentActivity {
 
     public void dismissProgress() {
         try {
-            dialog.dismiss();
-            progressBar.setProgress(0);
+            if (dialog != null) {
+                dialog.dismiss();
+                progressBar.setProgress(0);
+            }
         } catch (Exception e) {
 
         }
     }
 
     public void updateProgress(int progress) {
-            progressBar.setProgress(progress);
+        progressBar.setProgress(progress);
     }
 
     @Override

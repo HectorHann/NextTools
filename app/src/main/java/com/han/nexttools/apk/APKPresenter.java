@@ -2,10 +2,12 @@ package com.han.nexttools.apk;
 
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.NonNull;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.han.nexttools.ftp.FTP;
 
@@ -72,8 +74,9 @@ public class APKPresenter implements APKContract.Presenter {
     }
 
     @Override
-    public void downloadAPKFile(final FTPFile file, final String fileDir, final String fileName) {
+    public void downloadAPKFile(Context context, final FTPFile file, final String fileDir, final String fileName) {
         mView.showProgress();
+        Toast.makeText(context, "Download " + file.getName(), Toast.LENGTH_LONG).show();
         new Thread() {
             @Override
             public void run() {
