@@ -40,6 +40,11 @@ jobs:
 
       # run tests!
       - run: gradle test
+  dependencies:
+    override:
+      - sudo ANDROID_HOME=/usr/local/android-sdk-linux ./gradlew dependencies
+
+
 
 
 
