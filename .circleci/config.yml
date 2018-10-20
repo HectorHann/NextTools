@@ -23,6 +23,7 @@ jobs:
 
     steps:
       - checkout
+      - pull
 
       # Download and cache dependencies
       - restore_cache:
